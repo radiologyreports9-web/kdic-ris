@@ -2,14 +2,1524 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KDIC RIS Application</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#6366f1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://cdnjs.cloudflare.com;">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>KDIC Professional RIS</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --primary: #6366f1;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        .login-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        .login-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 30px 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        .logo { text-align: center; margin-bottom: 24px; }
+        .logo img { width: 80px; height: 80px; margin-bottom: 12px; }
+        .logo h1 { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .logo p { color: rgba(255, 255, 255, 0.9); font-size: 13px; }
+        .role-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+        .role-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .role-card:active { transform: scale(0.95); }
+        .role-card.active { background: rgba(255, 255, 255, 0.25); border-color: #fff; }
+        .role-icon { font-size: 28px; margin-bottom: 6px; }
+        .role-title { font-size: 12px; font-weight: 600; color: #fff; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: rgba(255, 255, 255, 0.9); }
+        .form-control {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        .form-control:focus { outline: none; background: rgba(255, 255, 255, 0.15); border-color: #fff; }
+        .form-control::placeholder { color: rgba(255, 255, 255, 0.5); }
+        .form-control:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: #fff; color: #667eea; width: 100%; }
+        .btn-secondary { background: var(--success); color: #fff; }
+        .btn-warning { background: var(--warning); color: #fff; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-sm { padding: 8px 14px; font-size: 14px; }
+        .dashboard { display: none; min-height: 100vh; flex-direction: column; }
+        .dashboard.active { display: flex; }
+        .header {
+            background: var(--bg-secondary);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header h1 {
+            font-size: 18px;
+            background: linear-gradient(135deg, var(--primary), #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header-user { display: flex; align-items: center; gap: 10px; }
+        .user-info { text-align: right; }
+        .user-name { font-weight: 600; font-size: 13px; }
+        .user-role { font-size: 11px; color: var(--text-muted); }
+        .btn-logout { padding: 6px 12px; font-size: 12px; }
+        .nav {
+            background: var(--bg-secondary);
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .nav::-webkit-scrollbar { height: 4px; }
+        .nav-tabs { display: flex; gap: 8px; min-width: min-content; }
+        .nav-tab {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+        .nav-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .nav-tab:disabled { opacity: 0.3; cursor: not-allowed; }
+        .content { flex: 1; padding: 16px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+        .stat-icon { font-size: 32px; margin-bottom: 8px; }
+        .stat-value { font-size: 28px; font-weight: 800; color: var(--primary); }
+        .stat-label { font-size: 12px; color: var(--text-muted); }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; }
+        .card-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .card-title { font-size: 16px; font-weight: 600; }
+        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .card-body { padding: 16px; }
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
+        th { background: rgba(255, 255, 255, 0.02); font-weight: 600; font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: default; user-select: none; }
+        .badge.clickable { cursor: pointer; }
+        .badge-success { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+        .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .badge-info { background: rgba(99, 102, 241, 0.2); color: var(--primary); }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .modal.active { display: flex; align-items: flex-start; }
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 12px 12px 0 0;
+            width: 100%;
+            margin-top: auto;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--bg-secondary);
+            z-index: 1;
+        }
+        .modal-title { font-size: 18px; font-weight: 600; }
+        .modal-close {
+            background: transparent;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-muted);
+            width: 36px;
+            height: 36px;
+        }
+        .modal-body { padding: 16px; }
+        .modal-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            position: sticky;
+            bottom: 0;
+            background: var(--bg-secondary);
+        }
+        .modal-footer .btn { flex: 1; }
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+        textarea.form-control { min-height: 80px; resize: vertical; font-size: 16px; }
+        select.form-control { cursor: pointer; font-size: 16px; }
+        .search-box { position: relative; width: 100%; }
+        .search-box::before { content: '🔍'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); }
+        .search-box input { padding-left: 36px; width: 100%; }
+        .icon-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+        .empty-icon { font-size: 48px; opacity: 0.5; margin-bottom: 12px; }
+        .empty-text { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .alert-success { background: rgba(34, 197, 94, 0.1); border-left: 4px solid var(--success); }
+        .alert-info { background: rgba(99, 102, 241, 0.1); border-left: 4px solid var(--primary); }
+        .alert-warning { background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning); }
+        .alert-danger { background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--danger); }
+        .test-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .test-item.readonly { opacity: 0.7; }
+        .test-item.clickable { cursor: pointer; }
+        .test-item.clickable:hover { background: rgba(255, 255, 255, 0.05); }
+        .backup-status {
+            background: var(--bg-secondary);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .backup-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .permission-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            margin-left: 8px;
+        }
+        .locked-icon {
+            display: inline-block;
+            margin-left: 6px;
+            opacity: 0.5;
+        }
+        @media (max-width: 640px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            table { font-size: 12px; min-width: 500px; }
+        }
+        @media (min-width: 641px) {
+            .login-container { max-width: 450px; padding: 40px; }
+            .modal-content { max-width: 600px; margin: 20px auto; border-radius: 12px; }
+            .form-grid { grid-template-columns: repeat(2, 1fr); }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (min-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+            .modal-content { max-width: 800px; }
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to the KDIC RIS Application</h1>
-    <p>This is the main page of the application.</p>
-    <script>
-        // Your JavaScript code goes here
-    </script>
+
+<!-- Install PWA Banner -->
+<div id="installBanner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--primary); color: white; padding: 16px; text-align: center; z-index: 9999;">
+    <p style="margin-bottom: 10px;">Install KDIC RIS for better experience!</p>
+    <button onclick="installApp()" style="background: white; color: var(--primary); padding: 10px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Install App</button>
+    <button onclick="dismissInstall()" style="background: transparent; color: white; padding: 10px 24px; border: 1px solid white; border-radius: 6px; margin-left: 10px; cursor: pointer;">Later</button>
+</div>
+
+<!-- Login Screen -->
+<div id="loginScreen" class="login-screen">
+    <div class="login-container">
+        <div class="logo">
+            <img src="icon-192.png" alt="KDIC Logo">
+            <h1>KDIC RIS</h1>
+            <p>Radiology Information System</p>
+        </div>
+        <div class="role-grid" id="roleSelector">
+            <div class="role-card" data-role="admin">
+                <div class="role-icon">👨‍💼</div>
+                <div class="role-title">Admin</div>
+            </div>
+            <div class="role-card" data-role="doctor">
+                <div class="role-icon">👨‍⚕️</div>
+                <div class="role-title">Doctor</div>
+            </div>
+            <div class="role-card" data-role="receptionist">
+                <div class="role-icon">👩‍💼</div>
+                <div class="role-title">Receptionist</div>
+            </div>
+            <div class="role-card" data-role="technician">
+                <div class="role-icon">🔬</div>
+                <div class="role-title">Technician</div>
+            </div>
+        </div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" class="form-control" id="loginUsername" placeholder="Enter username" required autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" id="loginPassword" placeholder="Enter password" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.2); text-align: center; font-size: 11px; color: rgba(255,255,255,0.7);">
+            <p>⚠️ Change default passwords after first login</p>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard" class="dashboard">
+    <div class="header">
+        <h1>🏥 KDIC RIS</h1>
+        <div class="header-user">
+            <div class="user-info">
+                <div class="user-name" id="userName"></div>
+                <div class="user-role" id="userRole"></div>
+            </div>
+            <button class="btn btn-logout btn-danger" onclick="app.logout()">Logout</button>
+        </div>
+    </div>
+    
+    <div class="nav">
+        <div class="nav-tabs" id="navTabs">
+            <button class="nav-tab active" data-tab="dashboard" data-permission="all">📊 Dashboard</button>
+            <button class="nav-tab" data-tab="patients" data-permission="admin,receptionist,doctor">👥 Patients</button>
+            <button class="nav-tab" data-tab="billing" data-permission="admin,receptionist">💰 Billing</button>
+            <button class="nav-tab" data-tab="tests" data-permission="admin">🧪 Tests</button>
+            <button class="nav-tab" data-tab="backup" data-permission="admin">💾 Backup</button>
+            <button class="nav-tab" data-tab="settings" data-permission="admin">⚙️ Settings</button>
+        </div>
+    </div>
+    
+    <div class="content">
+        <!-- Dashboard Tab -->
+        <div id="tab-dashboard" class="tab-pane active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value" id="statPatients">0</div>
+                    <div class="stat-label">Patients</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value">₹<span id="statRevenue">0</span></div>
+                    <div class="stat-label">Revenue</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-value" id="statPending">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value" id="statPaid">0</div>
+                    <div class="stat-label">Paid Today</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">Recent Activity</h3></div>
+                <div class="card-body" id="recentActivity">
+                    <div class="empty-state">
+                        <div class="empty-icon">📊</div>
+                        <div class="empty-text">No activity yet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Patients Tab -->
+        <div id="tab-patients" class="tab-pane">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Patients</h3>
+                    <button class="btn btn-primary btn-sm" id="btnAddPatient" onclick="app.openModal('patientModal')">+ Add Patient</button>
+                </div>
+                <div class="card-body">
+                    <div class="search-box" style="margin-bottom: 14px;">
+                        <input type="text" class="form-control" id="searchPatients" placeholder="Search..." onkeyup="app.searchPatients()">
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Test</th>
+                                    <th>Doctor</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="patientsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Billing Tab -->
+        <div id="tab-billing" class="tab-pane">
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">Billing<span class="permission-badge">Admin/Reception Only</span></h3></div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <span>💡</span>
+                        <div><strong>Admin/Reception:</strong> Click status or amount to edit</div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="billingTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tests Tab -->
+        <div id="tab-tests" class="tab-pane">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Test Management<span class="permission-badge">Admin Only</span></h3>
+                    <button class="btn btn-secondary btn-sm" onclick="app.addNewTest()">+ Add Test</button>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <span>🔒</span>
+                        <div><strong>Admin Only:</strong> Only administrators can add/edit/delete tests</div>
+                    </div>
+                    <div id="testsList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Backup Tab -->
+        <div id="tab-backup" class="tab-pane">
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">Automatic Backup<span class="permission-badge">Admin Only</span></h3></div>
+                <div class="card-body">
+                    <div class="backup-status">
+                        <div class="backup-indicator"></div>
+                        <div>
+                            <strong>Auto-backup Active</strong><br>
+                            <small style="color: var(--text-muted);">Last backup: <span id="lastBackupTime">Never</span></small>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <span>✅</span>
+                        <div>Data automatically saves every 5 minutes to your device</div>
+                    </div>
+                    
+                    <div style="display: grid; gap: 12px; margin-top: 16px;">
+                        <button class="btn btn-primary" onclick="app.downloadBackup()">📥 Download Backup Now</button>
+                        <button class="btn btn-secondary" onclick="app.uploadBackup()">📤 Restore from Backup</button>
+                        <button class="btn btn-warning" onclick="app.syncToServer()">🔄 Sync to Laptop Server</button>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 20px;">
+                        <div class="card-header"><h3 class="card-title">Server Connection</h3></div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">Laptop Server Address</label>
+                                <input type="text" class="form-control" id="serverAddress" placeholder="http://192.168.1.100:3000" value="http://localhost:3000">
+                            </div>
+                            <button class="btn btn-primary" onclick="app.testConnection()">Test Connection</button>
+                            <div id="connectionStatus" style="margin-top: 12px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Tab -->
+        <div id="tab-settings" class="tab-pane">
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">Clinic Settings<span class="permission-badge">Admin Only</span></h3></div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div>
+                            <label class="form-label">Clinic Name</label>
+                            <input type="text" class="form-control" id="clinicName">
+                        </div>
+                        <div>
+                            <label class="form-label">Phone</label>
+                            <input type="tel" class="form-control" id="clinicPhone">
+                        </div>
+                        <div>
+                            <label class="form-label">Address</label>
+                            <input type="text" class="form-control" id="clinicAddress">
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <button class="btn btn-primary" onclick="app.saveSettings()">Save Settings</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">Change Password</h3></div>
+                <div class="card-body">
+                    <form id="changePasswordForm">
+                        <div class="form-grid">
+                            <div>
+                                <label class="form-label">Current Password</label>
+                                <input type="password" class="form-control" id="currentPassword" required>
+                            </div>
+                            <div>
+                                <label class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" required minlength="6">
+                            </div>
+                        </div>
+                        <div style="margin-top: 16px;">
+                            <button type="submit" class="btn btn-warning">Change Password</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Patient Modal -->
+<div id="patientModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Add Patient</h3>
+            <button class="modal-close" onclick="app.closeModal('patientModal')">×</button>
+        </div>
+        <form id="patientForm">
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">Name *</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Age *</label>
+                        <input type="number" class="form-control" name="age" required min="0" max="150">
+                    </div>
+                    <div>
+                        <label class="form-label">Gender *</label>
+                        <select class="form-control" name="gender" required>
+                            <option value="">Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Phone *</label>
+                        <input type="tel" class="form-control" name="phone" required pattern="[0-9]{10}" maxlength="10">
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label class="form-label">Test *</label>
+                        <select class="form-control" name="test" id="testSelect" required></select>
+                    </div>
+                    <div>
+                        <label class="form-label">Amount (₹) <span class="locked-icon" id="amountLockIcon">🔒</span></label>
+                        <input type="number" class="form-control" name="amount" id="testAmount" readonly>
+                        <small style="color: var(--text-muted); display: block; margin-top: 4px;">Auto-filled from price list</small>
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label class="form-label">Referring Doctor</label>
+                        <input type="text" class="form-control" name="referredBy" placeholder="Dr. Name" maxlength="100">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="app.closeModal('patientModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Patient</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Test Modal -->
+<div id="addTestModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Add Test<span class="permission-badge">Admin Only</span></h3>
+            <button class="modal-close" onclick="app.closeModal('addTestModal')">×</button>
+        </div>
+        <form id="addTestForm">
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div style="grid-column: 1 / -1;">
+                        <label class="form-label">Test Name *</label>
+                        <input type="text" class="form-control" name="testName" required maxlength="100">
+                    </div>
+                    <div>
+                        <label class="form-label">Price (₹) *</label>
+                        <input type="number" class="form-control" name="price" required min="0" max="99999">
+                    </div>
+                    <div>
+                        <label class="form-label">Duration *</label>
+                        <input type="text" class="form-control" name="duration" placeholder="15 min" required maxlength="20">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="app.closeModal('addTestModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Test</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Test Modal -->
+<div id="editTestModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Edit Test<span class="permission-badge">Admin Only</span></h3>
+            <button class="modal-close" onclick="app.closeModal('editTestModal')">×</button>
+        </div>
+        <form id="editTestForm">
+            <div class="modal-body">
+                <input type="hidden" id="editTestIndex">
+                <div class="form-grid">
+                    <div style="grid-column: 1 / -1;">
+                        <label class="form-label">Test Name *</label>
+                        <input type="text" class="form-control" id="editTestName" required maxlength="100">
+                    </div>
+                    <div>
+                        <label class="form-label">Price (₹) *</label>
+                        <input type="number" class="form-control" id="editTestPrice" required min="0" max="99999">
+                    </div>
+                    <div>
+                        <label class="form-label">Duration *</label>
+                        <input type="text" class="form-control" id="editTestDuration" required maxlength="20">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="app.deleteTest()">Delete Test</button>
+                <button type="button" class="btn btn-secondary" onclick="app.closeModal('editTestModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<input type="file" id="backupFileInput" accept=".json" style="display: none;" onchange="app.handleBackupFile(this)">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+'use strict';
+
+// Security: Input sanitization
+const sanitizeInput = (input) => {
+    if (typeof input !== 'string') return input;
+    const div = document.createElement('div');
+    div.textContent = input;
+    return div.innerHTML;
+};
+
+// Security: Validate data
+const validateData = (data) => {
+    if (!data || typeof data !== 'object') return false;
+    return true;
+};
+
+// PWA Installation
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('installBanner').style.display = 'block';
+});
+
+function installApp() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            deferredPrompt = null;
+            document.getElementById('installBanner').style.display = 'none';
+        });
+    }
+}
+
+function dismissInstall() {
+    document.getElementById('installBanner').style.display = 'none';
+}
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js').then(() => {
+        console.log('Service Worker registered');
+    }).catch(err => console.error('SW registration failed:', err));
+}
+
+// Role-Based Permissions
+const PERMISSIONS = {
+    admin: {
+        canAddPatient: true,
+        canEditBilling: true,
+        canEditTests: true,
+        canViewBackup: true,
+        canEditSettings: true,
+        tabs: ['dashboard', 'patients', 'billing', 'tests', 'backup', 'settings']
+    },
+    doctor: {
+        canAddPatient: true,
+        canEditBilling: false,
+        canEditTests: false,
+        canViewBackup: false,
+        canEditSettings: false,
+        tabs: ['dashboard', 'patients']
+    },
+    receptionist: {
+        canAddPatient: true,
+        canEditBilling: true,
+        canEditTests: false,
+        canViewBackup: false,
+        canEditSettings: false,
+        tabs: ['dashboard', 'patients', 'billing']
+    },
+    technician: {
+        canAddPatient: false,
+        canEditBilling: false,
+        canEditTests: false,
+        canViewBackup: false,
+        canEditSettings: false,
+        tabs: ['dashboard']
+    }
+};
+
+// Main Application
+const APP = {
+    version: '4.0-SECURE',
+    data: {
+        users: [
+            { username: 'admin', password: 'admin123', name: 'Administrator', role: 'admin' },
+            { username: 'dr.sharma', password: 'doctor123', name: 'Dr. Sharma', role: 'doctor' },
+            { username: 'reception', password: 'reception123', name: 'Reception', role: 'receptionist' },
+            { username: 'tech1', password: 'tech123', name: 'Technician', role: 'technician' }
+        ],
+        patients: [],
+        billing: [],
+        tests: [
+            { test: 'USG Abdomen', price: 800, duration: '15 min' },
+            { test: 'USG Pregnancy', price: 1200, duration: '20 min' },
+            { test: 'USG KUB', price: 700, duration: '15 min' },
+            { test: 'X-Ray Chest', price: 400, duration: '5 min' },
+            { test: 'X-Ray Abdomen', price: 450, duration: '5 min' },
+            { test: 'CT Scan', price: 3000, duration: '30 min' }
+        ],
+        settings: {
+            clinicName: 'Keshav Diagnostic Center',
+            address: 'Your address',
+            phone: '+91 98765 43210',
+            serverAddress: 'http://localhost:3000'
+        },
+        currentUser: null,
+        lastBackup: null
+    },
+    
+    init() {
+        this.loadData();
+        this.initLogin();
+        this.initForms();
+        this.startAutoBackup();
+    },
+    
+    loadData() {
+        try {
+            const saved = localStorage.getItem('kdic_secure_v4');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (validateData(data)) {
+                    Object.assign(this.data, data);
+                }
+            }
+        } catch (e) {
+            console.error('Error loading data:', e);
+        }
+    },
+    
+    saveData() {
+        try {
+            const dataToSave = { ...this.data, currentUser: null };
+            localStorage.setItem('kdic_secure_v4', JSON.stringify(dataToSave));
+            this.data.lastBackup = new Date().toISOString();
+            this.updateBackupTime();
+        } catch (e) {
+            console.error('Error saving data:', e);
+            alert('Error saving data!');
+        }
+    },
+    
+    startAutoBackup() {
+        setInterval(() => {
+            if (this.data.currentUser) {
+                this.saveData();
+                console.log('Auto-backup completed');
+            }
+        }, 300000); // Every 5 minutes
+    },
+    
+    updateBackupTime() {
+        const elem = document.getElementById('lastBackupTime');
+        if (elem && this.data.lastBackup) {
+            const date = new Date(this.data.lastBackup);
+            elem.textContent = date.toLocaleString();
+        }
+    },
+    
+    hasPermission(permission) {
+        if (!this.data.currentUser) return false;
+        const role = this.data.currentUser.role;
+        return PERMISSIONS[role] && PERMISSIONS[role][permission];
+    },
+    
+    initLogin() {
+        const roleCards = document.querySelectorAll('.role-card');
+        let selectedRole = null;
+        
+        roleCards.forEach(card => {
+            card.addEventListener('click', () => {
+                roleCards.forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                selectedRole = card.dataset.role;
+            });
+        });
+        
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = sanitizeInput(document.getElementById('loginUsername').value.trim());
+            const password = document.getElementById('loginPassword').value;
+            
+            const user = this.data.users.find(u => 
+                u.username === username && 
+                u.password === password &&
+                (selectedRole ? u.role === selectedRole : true)
+            );
+            
+            if (user) {
+                this.data.currentUser = user;
+                this.showDashboard();
+            } else {
+                alert('Invalid credentials!');
+            }
+        });
+    },
+    
+    showDashboard() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboard').classList.add('active');
+        document.getElementById('userName').textContent = sanitizeInput(this.data.currentUser.name);
+        document.getElementById('userRole').textContent = this.data.currentUser.role.charAt(0).toUpperCase() + this.data.currentUser.role.slice(1);
+        
+        this.applyPermissions();
+        this.initNavigation();
+        this.loadDashboard();
+        this.updateBackupTime();
+    },
+    
+    applyPermissions() {
+        const role = this.data.currentUser.role;
+        const perms = PERMISSIONS[role];
+        
+        // Show/hide tabs based on permissions
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            const tabName = tab.dataset.tab;
+            if (!perms.tabs.includes(tabName)) {
+                tab.style.display = 'none';
+            } else {
+                tab.style.display = '';
+            }
+        });
+        
+        // Disable add patient button if no permission
+        const btnAddPatient = document.getElementById('btnAddPatient');
+        if (btnAddPatient) {
+            btnAddPatient.disabled = !perms.canAddPatient;
+        }
+    },
+    
+    logout() {
+        if (confirm('Logout?')) {
+            this.data.currentUser = null;
+            location.reload();
+        }
+    },
+    
+    initNavigation() {
+        const navTabs = document.querySelectorAll('.nav-tab');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        navTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                if (tab.disabled) return;
+                
+                const tabName = tab.dataset.tab;
+                navTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                tabPanes.forEach(p => p.classList.remove('active'));
+                document.getElementById(`tab-${tabName}`).classList.add('active');
+                
+                switch(tabName) {
+                    case 'dashboard': this.loadDashboard(); break;
+                    case 'patients': this.loadPatients(); break;
+                    case 'billing': this.loadBilling(); break;
+                    case 'tests': this.loadTests(); break;
+                    case 'backup': this.updateBackupTime(); break;
+                    case 'settings': this.loadSettings(); break;
+                }
+            });
+        });
+    },
+    
+    initForms() {
+        // Patient Form
+        document.getElementById('patientForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            if (!this.hasPermission('canAddPatient')) {
+                alert('You do not have permission to add patients!');
+                return;
+            }
+            
+            const formData = new FormData(e.target);
+            const patient = {
+                id: 'P' + Date.now(),
+                name: sanitizeInput(formData.get('name')),
+                age: parseInt(formData.get('age')),
+                gender: sanitizeInput(formData.get('gender')),
+                phone: sanitizeInput(formData.get('phone')),
+                test: sanitizeInput(formData.get('test')),
+                referredBy: sanitizeInput(formData.get('referredBy')),
+                date: new Date().toISOString(),
+                addedBy: this.data.currentUser.username
+            };
+            
+            // Validate phone number
+            if (!/^[0-9]{10}$/.test(patient.phone)) {
+                alert('Invalid phone number! Must be 10 digits.');
+                return;
+            }
+            
+            const amount = parseInt(formData.get('amount')) || 0;
+            const billing = {
+                id: 'B' + Date.now(),
+                patientId: patient.id,
+                patientName: patient.name,
+                service: patient.test,
+                amount: amount,
+                status: 'pending',
+                date: new Date().toISOString(),
+                createdBy: this.data.currentUser.username
+            };
+            
+            this.data.patients.push(patient);
+            this.data.billing.push(billing);
+            this.saveData();
+            
+            alert('Patient registered successfully!');
+            this.closeModal('patientModal');
+            e.target.reset();
+            this.loadPatients();
+            this.loadDashboard();
+        });
+        
+        // Test Select Change
+        document.getElementById('testSelect').addEventListener('change', (e) => {
+            const test = this.data.tests.find(t => t.test === e.target.value);
+            document.getElementById('testAmount').value = test ? test.price : '';
+        });
+        
+        // Add Test Form
+        document.getElementById('addTestForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            if (!this.hasPermission('canEditTests')) {
+                alert('Only administrators can add tests!');
+                return;
+            }
+            
+            const formData = new FormData(e.target);
+            const newTest = {
+                test: sanitizeInput(formData.get('testName')),
+                price: parseInt(formData.get('price')),
+                duration: sanitizeInput(formData.get('duration'))
+            };
+            
+            // Validate price
+            if (newTest.price < 0 || newTest.price > 99999) {
+                alert('Invalid price!');
+                return;
+            }
+            
+            this.data.tests.push(newTest);
+            this.saveData();
+            alert('Test added successfully!');
+            this.closeModal('addTestModal');
+            e.target.reset();
+            this.loadTests();
+        });
+        
+        // Edit Test Form
+        document.getElementById('editTestForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            if (!this.hasPermission('canEditTests')) {
+                alert('Only administrators can edit tests!');
+                return;
+            }
+            
+            const index = parseInt(document.getElementById('editTestIndex').value);
+            const updatedTest = {
+                test: sanitizeInput(document.getElementById('editTestName').value),
+                price: parseInt(document.getElementById('editTestPrice').value),
+                duration: sanitizeInput(document.getElementById('editTestDuration').value)
+            };
+            
+            // Validate price
+            if (updatedTest.price < 0 || updatedTest.price > 99999) {
+                alert('Invalid price!');
+                return;
+            }
+            
+            this.data.tests[index] = updatedTest;
+            this.saveData();
+            alert('Test updated successfully!');
+            this.closeModal('editTestModal');
+            this.loadTests();
+        });
+        
+        // Change Password Form
+        document.getElementById('changePasswordForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const currentPass = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            
+            if (this.data.currentUser.password !== currentPass) {
+                alert('Current password is incorrect!');
+                return;
+            }
+            
+            if (newPass.length < 6) {
+                alert('New password must be at least 6 characters!');
+                return;
+            }
+            
+            const userIndex = this.data.users.findIndex(u => u.username === this.data.currentUser.username);
+            if (userIndex >= 0) {
+                this.data.users[userIndex].password = newPass;
+                this.data.currentUser.password = newPass;
+                this.saveData();
+                alert('Password changed successfully!');
+                e.target.reset();
+            }
+        });
+    },
+    
+    loadDashboard() {
+        document.getElementById('statPatients').textContent = this.data.patients.length;
+        const totalRevenue = this.data.billing.reduce((sum, b) => sum + (b.amount || 0), 0);
+        document.getElementById('statRevenue').textContent = totalRevenue.toLocaleString();
+        document.getElementById('statPending').textContent = this.data.billing.filter(b => b.status === 'pending').length;
+        document.getElementById('statPaid').textContent = this.data.billing.filter(b => 
+            b.status === 'paid' && new Date(b.date).toDateString() === new Date().toDateString()
+        ).length;
+        
+        const container = document.getElementById('recentActivity');
+        const activities = this.data.patients.slice(-5).reverse().map(p => 
+            `<div style="padding: 10px; border-bottom: 1px solid var(--border);">
+                <strong>${sanitizeInput(p.name)}</strong> - ${sanitizeInput(p.test)}
+            </div>`
+        ).join('');
+        container.innerHTML = activities || '<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">No activity</div></div>';
+    },
+    
+    loadPatients() {
+        const tbody = document.getElementById('patientsTable');
+        if (this.data.patients.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">No patients</div></div></td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = this.data.patients.map(p => `
+            <tr>
+                <td><strong>${sanitizeInput(p.name)}</strong><br><small style="color: var(--text-muted);">${p.age}/${sanitizeInput(p.gender)}</small></td>
+                <td>${sanitizeInput(p.test)}</td>
+                <td>${p.referredBy ? sanitizeInput(p.referredBy) : '-'}</td>
+                <td>${this.formatDate(p.date)}</td>
+                <td>
+                    <button class="icon-btn" onclick="app.viewPatient('${p.id}')" title="View">👁️</button>
+                </td>
+            </tr>
+        `).join('');
+    },
+    
+    searchPatients() {
+        const search = document.getElementById('searchPatients').value.toLowerCase();
+        const filtered = this.data.patients.filter(p => 
+            p.name.toLowerCase().includes(search) || p.phone.includes(search)
+        );
+        
+        const tbody = document.getElementById('patientsTable');
+        tbody.innerHTML = filtered.map(p => `
+            <tr>
+                <td><strong>${sanitizeInput(p.name)}</strong><br><small style="color: var(--text-muted);">${p.age}/${sanitizeInput(p.gender)}</small></td>
+                <td>${sanitizeInput(p.test)}</td>
+                <td>${p.referredBy ? sanitizeInput(p.referredBy) : '-'}</td>
+                <td>${this.formatDate(p.date)}</td>
+                <td>
+                    <button class="icon-btn" onclick="app.viewPatient('${p.id}')" title="View">👁️</button>
+                </td>
+            </tr>
+        `).join('');
+    },
+    
+    viewPatient(id) {
+        const patient = this.data.patients.find(p => p.id === id);
+        if (!patient) return;
+        
+        const details = `
+Patient ID: ${patient.id}
+Name: ${sanitizeInput(patient.name)}
+Age: ${patient.age}
+Gender: ${sanitizeInput(patient.gender)}
+Phone: ${sanitizeInput(patient.phone)}
+Test: ${sanitizeInput(patient.test)}
+Referring Doctor: ${patient.referredBy ? sanitizeInput(patient.referredBy) : 'N/A'}
+Date: ${this.formatDate(patient.date)}
+        `.trim();
+        
+        alert(details);
+    },
+    
+    loadBilling() {
+        const tbody = document.getElementById('billingTable');
+        if (this.data.billing.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">No bills</div></div></td></tr>';
+            return;
+        }
+        
+        const canEdit = this.hasPermission('canEditBilling');
+        
+        tbody.innerHTML = this.data.billing.map(b => `
+            <tr>
+                <td><strong>${sanitizeInput(b.patientName)}</strong><br><small style="color: var(--text-muted);">${sanitizeInput(b.service)}</small></td>
+                <td>₹${b.amount.toLocaleString()} ${canEdit ? '' : '<span class="locked-icon">🔒</span>'}</td>
+                <td><span class="badge badge-${b.status === 'paid' ? 'success' : 'warning'} ${canEdit ? 'clickable' : ''}" ${canEdit ? `onclick="app.changePaymentStatus('${b.id}')"` : ''}>${b.status.toUpperCase()}</span></td>
+                <td>
+                    <button class="icon-btn" onclick="app.printBill('${b.id}')" title="Print">🖨️</button>
+                </td>
+            </tr>
+        `).join('');
+    },
+    
+    changePaymentStatus(billId) {
+        if (!this.hasPermission('canEditBilling')) {
+            alert('You do not have permission to edit billing!');
+            return;
+        }
+        
+        const bill = this.data.billing.find(b => b.id === billId);
+        if (!bill) return;
+        
+        const statuses = ['pending', 'paid', 'partial'];
+        const currentIndex = statuses.indexOf(bill.status);
+        bill.status = statuses[(currentIndex + 1) % statuses.length];
+        bill.lastModifiedBy = this.data.currentUser.username;
+        bill.lastModifiedDate = new Date().toISOString();
+        
+        this.saveData();
+        this.loadBilling();
+        this.loadDashboard();
+    },
+    
+    loadTests() {
+        const container = document.getElementById('testsList');
+        const testSelect = document.getElementById('testSelect');
+        const canEdit = this.hasPermission('canEditTests');
+        
+        container.innerHTML = this.data.tests.map((test, i) => `
+            <div class="test-item ${canEdit ? 'clickable' : 'readonly'}" ${canEdit ? `onclick="app.editTestItem(${i})"` : ''}>
+                <div>
+                    <strong>${sanitizeInput(test.test)}</strong><br>
+                    <small style="color: var(--text-muted);">₹${test.price.toLocaleString()} • ${sanitizeInput(test.duration)}</small>
+                </div>
+                <div>${canEdit ? '✏️' : '🔒'}</div>
+            </div>
+        `).join('');
+        
+        testSelect.innerHTML = '<option value="">Select Test</option>' + 
+            this.data.tests.map(t => `<option value="${sanitizeInput(t.test)}">${sanitizeInput(t.test)} - ₹${t.price}</option>`).join('');
+    },
+    
+    addNewTest() {
+        if (!this.hasPermission('canEditTests')) {
+            alert('Only administrators can add tests!');
+            return;
+        }
+        this.openModal('addTestModal');
+    },
+    
+    editTestItem(index) {
+        if (!this.hasPermission('canEditTests')) {
+            alert('Only administrators can edit tests!');
+            return;
+        }
+        
+        const test = this.data.tests[index];
+        document.getElementById('editTestIndex').value = index;
+        document.getElementById('editTestName').value = test.test;
+        document.getElementById('editTestPrice').value = test.price;
+        document.getElementById('editTestDuration').value = test.duration;
+        this.openModal('editTestModal');
+    },
+    
+    deleteTest() {
+        if (!this.hasPermission('canEditTests')) {
+            alert('Only administrators can delete tests!');
+            return;
+        }
+        
+        if (confirm('Delete this test? This action cannot be undone.')) {
+            const index = parseInt(document.getElementById('editTestIndex').value);
+            this.data.tests.splice(index, 1);
+            this.saveData();
+            this.closeModal('editTestModal');
+            this.loadTests();
+            alert('Test deleted successfully!');
+        }
+    },
+    
+    loadSettings() {
+        if (!this.hasPermission('canEditSettings')) {
+            document.getElementById('clinicName').disabled = true;
+            document.getElementById('clinicPhone').disabled = true;
+            document.getElementById('clinicAddress').disabled = true;
+        } else {
+            document.getElementById('clinicName').disabled = false;
+            document.getElementById('clinicPhone').disabled = false;
+            document.getElementById('clinicAddress').disabled = false;
+        }
+        
+        document.getElementById('clinicName').value = this.data.settings.clinicName;
+        document.getElementById('clinicPhone').value = this.data.settings.phone;
+        document.getElementById('clinicAddress').value = this.data.settings.address;
+        document.getElementById('serverAddress').value = this.data.settings.serverAddress || 'http://localhost:3000';
+    },
+    
+    saveSettings() {
+        if (!this.hasPermission('canEditSettings')) {
+            alert('Only administrators can save settings!');
+            return;
+        }
+        
+        this.data.settings.clinicName = sanitizeInput(document.getElementById('clinicName').value);
+        this.data.settings.phone = sanitizeInput(document.getElementById('clinicPhone').value);
+        this.data.settings.address = sanitizeInput(document.getElementById('clinicAddress').value);
+        this.data.settings.serverAddress = sanitizeInput(document.getElementById('serverAddress').value);
+        this.saveData();
+        alert('Settings saved successfully!');
+    },
+    
+    downloadBackup() {
+        if (!this.hasPermission('canViewBackup')) {
+            alert('You do not have permission to download backups!');
+            return;
+        }
+        
+        const dataStr = JSON.stringify(this.data, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `KDIC_Backup_${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+        alert('Backup downloaded successfully!');
+    },
+    
+    uploadBackup() {
+        if (!this.hasPermission('canViewBackup')) {
+            alert('You do not have permission to restore backups!');
+            return;
+        }
+        document.getElementById('backupFileInput').click();
+    },
+    
+    handleBackupFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (!validateData(data)) {
+                    throw new Error('Invalid backup file format');
+                }
+                
+                if (confirm('Restore from this backup? Current data will be replaced. This action cannot be undone.')) {
+                    Object.assign(this.data, data);
+                    this.saveData();
+                    alert('Backup restored successfully! Refreshing...');
+                    setTimeout(() => location.reload(), 1000);
+                }
+            } catch (err) {
+                console.error('Backup restore error:', err);
+                alert('Invalid backup file! Please select a valid KDIC backup file.');
+            }
+        };
+        reader.readAsText(file);
+        input.value = '';
+    },
+    
+    async syncToServer() {
+        if (!this.hasPermission('canViewBackup')) {
+            alert('You do not have permission to sync backups!');
+            return;
+        }
+        
+        const serverUrl = document.getElementById('serverAddress').value;
+        if (!serverUrl) {
+            alert('Please enter server address!');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${serverUrl}/sync`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(this.data)
+            });
+            
+            if (response.ok) {
+                alert('Data synced to laptop server successfully!');
+            } else {
+                throw new Error('Server error');
+            }
+        } catch (err) {
+            console.error('Sync error:', err);
+            alert('Failed to sync. Make sure laptop server is running and address is correct.');
+        }
+    },
+    
+    async testConnection() {
+        const serverUrl = document.getElementById('serverAddress').value;
+        if (!serverUrl) {
+            alert('Please enter server address!');
+            return;
+        }
+        
+        const status = document.getElementById('connectionStatus');
+        status.innerHTML = '<div class="alert alert-info"><span>⏳</span><div>Testing connection...</div></div>';
+        
+        try {
+            const response = await fetch(`${serverUrl}/ping`, {
+                method: 'GET',
+                timeout: 5000
+            });
+            
+            if (response.ok) {
+                status.innerHTML = '<div class="alert alert-success"><span>✅</span><div>Connected successfully!</div></div>';
+            } else {
+                throw new Error('Server error');
+            }
+        } catch (err) {
+            console.error('Connection test error:', err);
+            status.innerHTML = '<div class="alert alert-warning"><span>⚠️</span><div>Cannot connect. Make sure server is running on your laptop.</div></div>';
+        }
+    },
+    
+    printBill(billId) {
+        const bill = this.data.billing.find(b => b.id === billId);
+        if (!bill) return;
+        
+        const win = window.open('', '_blank');
+        win.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Bill - ${sanitizeInput(bill.id)}</title>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+                    h1 { color: #6366f1; margin-bottom: 5px; }
+                    .clinic-info { margin-bottom: 30px; color: #666; }
+                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+                    th { background: #f5f5f5; font-weight: 600; }
+                    .total { font-size: 18px; font-weight: bold; }
+                    .footer { margin-top: 40px; text-align: center; color: #999; font-size: 12px; }
+                    @media print { button { display: none; } }
+                </style>
+            </head>
+            <body>
+                <h1>${sanitizeInput(this.data.settings.clinicName)}</h1>
+                <div class="clinic-info">
+                    ${sanitizeInput(this.data.settings.address)}<br>
+                    Phone: ${sanitizeInput(this.data.settings.phone)}
+                </div>
+                <h2>Bill / Receipt</h2>
+                <table>
+                    <tr><th>Bill ID:</th><td>${sanitizeInput(bill.id)}</td></tr>
+                    <tr><th>Patient:</th><td>${sanitizeInput(bill.patientName)}</td></tr>
+                    <tr><th>Service:</th><td>${sanitizeInput(bill.service)}</td></tr>
+                    <tr><th>Amount:</th><td class="total">₹${bill.amount.toLocaleString()}</td></tr>
+                    <tr><th>Status:</th><td>${sanitizeInput(bill.status.toUpperCase())}</td></tr>
+                    <tr><th>Date:</th><td>${this.formatDate(bill.date)}</td></tr>
+                </table>
+                <div class="footer">
+                    <p>Thank you for choosing ${sanitizeInput(this.data.settings.clinicName)}!</p>
+                    <p>This is a computer-generated bill.</p>
+                </div>
+                <button onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; background: #6366f1; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">Print Bill</button>
+            </body>
+            </html>
+        `);
+        win.document.close();
+    },
+    
+    openModal(modalId) {
+        document.getElementById(modalId).classList.add('active');
+    },
+    
+    closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    },
+    
+    formatDate(date) {
+        return new Date(date).toLocaleDateString('en-IN');
+    }
+};
+
+// Initialize app
+window.app = APP;
+document.addEventListener('DOMContentLoaded', () => APP.init());
+
+// Security: Prevent console tampering
+console.log('%cKDIC RIS - Secure Version', 'color: #6366f1; font-size: 20px; font-weight: bold;');
+console.log('%cWarning: Do not paste any code here unless you know what you are doing!', 'color: red; font-size: 14px;');
+</script>
+
 </body>
 </html>

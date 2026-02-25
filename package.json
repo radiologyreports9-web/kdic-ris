@@ -1,0 +1,12 @@
+{
+  "name": "kdic-ris-server",
+  "version": "3.0.0",
+  "description": "KDIC RIS Laptop Server with Auto-Backup",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["medical", "radiology", "backup"],
+  "author": "KDIC",
+  "license": "MIT"
+}
